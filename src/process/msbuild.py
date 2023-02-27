@@ -6,10 +6,11 @@ SOLUTION = "ai.sln"
 EXECUTABLE = "msbuild"
 
 
-async def trainer(variation: str, height: int):
+async def trainer(variation: str, height: int, activation: str):
     return await compile(variation, {
         "TRAINING": None,
         "HEIGHT": height,
+        f"ACTIVATION_{activation}": None
     })
 
 

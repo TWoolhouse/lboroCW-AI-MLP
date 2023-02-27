@@ -35,6 +35,6 @@ def variant_random(train: float, validation: float, test: float) -> Variant:
 
 
 VARIANTS: dict[str, Variant] = {
+    # "default_60_20_20": variant_default(0.6, 0.2, 0.2),
     "random_60_20_20": variant_random(0.6, 0.2, 0.2),
-    "default_60_20_20": variant_default(0.6, 0.2, 0.2),
 }

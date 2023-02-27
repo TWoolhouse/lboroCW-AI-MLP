@@ -2,18 +2,18 @@ import argparse
 import asyncio
 import csv
 import struct
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from traceback import print_exc
 
 import msbuild
 import stats
+import train
 import variants
 from record import Record
+from variants import variant_name
 
 FILENAME_RAW = "data/raw.csv"
-
-
-def variant_name(*variants: str) -> str:
-    return ".".join(variants)
 
 
 def filename_fmt(variant: str) -> str:
@@ -57,9 +57,8 @@ async def entry_preprocess():
 
 
 async def entry_build():
-
-    build_jobs = [(height[0], msbuild.trainer(height[0], height[1]))
-                  for height in variants.builds()]
+    build_jobs = [(name := variant_name(height[0], activation[0]), msbuild.trainer(name, height[1], activation[1]))
+                  for height, activation in variants.builds()]
     print(f"Compiling Trainers: {len(build_jobs)}")
     builds, jobs = zip(*build_jobs)
     status = await asyncio.gather(*jobs)
@@ -72,7 +71,16 @@ async def entry_build():
 
 
 async def entry_train():
-    pass
+    trainers = variants.train()
+    print(f"Training: {len(trainers)}")
+    with ProcessPoolExecutor(max_workers=4) as pool:
+        jobs = [(name, asyncio.wait_for(asyncio.get_event_loop().run_in_executor(pool, partial(
+            train.spawn, name, filename_fmt(dataset), build)), timeout=None))
+            for name, dataset, build in trainers]
+        async with asyncio.TaskGroup() as tg:
+            tasks = [(name, tg.create_task(job)) for name, job in jobs]
+    for name, task in tasks:
+        print(f"\t{name}")
 
 
 async def main(args: argparse.Namespace):
@@ -86,12 +94,13 @@ async def main(args: argparse.Namespace):
     except Exception:
         print_exc()
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--preprocess", action="store_true",
-                    help="Preprocess the raw dataset")
-parser.add_argument("-b", "--build", action="store_true",
-                    help="Build the training executables")
-parser.add_argument("-t", "--train", action="store_true",
-                    help="Train the models")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--preprocess", action="store_true",
+                        help="Preprocess the raw dataset")
+    parser.add_argument("-b", "--build", action="store_true",
+                        help="Build the training executables")
+    parser.add_argument("-t", "--train", action="store_true",
+                        help="Train the models")
 
-asyncio.run(main(parser.parse_args()))
+    asyncio.run(main(parser.parse_args()))

@@ -1,7 +1,12 @@
+import activation
 import filter
 import height
 import split
 import standardise
+
+
+def variant_name(*variants: str) -> str:
+    return ".".join(variants)
 
 
 def all():
@@ -14,4 +19,10 @@ def datasets():
 
 def builds():
     # TODO: Get number of inputs
-    return height.variants(5)
+    return [(i, j) for i in height.variants(5) for j in activation.VARIANTS.items()]
+
+
+def train():
+    def vname(var):
+        return variant_name(*(v[0] for v in var))
+    return [(variant_name(vname(dataset), vname(build)), vname(dataset), vname(build)) for dataset in datasets() for build in builds()]
