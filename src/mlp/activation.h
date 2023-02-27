@@ -20,9 +20,7 @@ namespace mlp {
 			return 1.0 / (1.0 + exp(-value));
 		}
 		else if constexpr (Activator == Activation::TANH) {
-			auto epx = exp(value);
-			auto enx = exp(-value);
-			return (epx - enx) / (epx + enx);
+			return (tanh(value) + 1) / 2;
 		}
 	}
 
@@ -35,8 +33,8 @@ namespace mlp {
 			return activate<Activation::SIGMOID>(value) * (1.0 - activate<Activation::SIGMOID>(value));
 		}
 		else if constexpr (Activator == Activation::TANH) {
-			auto tanh = activate<Activation::TANH>(value);
-			return 1.0 - (tanh * tanh);
+			auto th = tanh(value);
+			return (1.0 - (th * th)) / 2;
 		}
 
 	}
