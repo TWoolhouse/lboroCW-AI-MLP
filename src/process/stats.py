@@ -2,7 +2,7 @@ import dataclasses
 from math import sqrt
 from typing import Collection, TypeAlias
 
-from record import Record, FIELDS
+from record import FIELDS, Record
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

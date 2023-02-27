@@ -1,4 +1,5 @@
 from typing import Callable, TypeAlias
+
 from record import Record
 from stats import Statistics
 

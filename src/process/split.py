@@ -1,6 +1,7 @@
-from typing import Callable, TypeAlias
-from record import Record
 import random
+from typing import Callable, TypeAlias
+
+from record import Record
 
 Variant: TypeAlias = Callable[[list[Record]], tuple[
     list[Record], list[Record], list[Record]

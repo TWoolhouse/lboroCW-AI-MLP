@@ -1,12 +1,13 @@
+import argparse
 import asyncio
 import csv
 import struct
 from traceback import print_exc
-from record import Record
-import stats
-import variants
 
 import msbuild
+import stats
+import variants
+from record import Record
 
 FILENAME_RAW = "data/raw.csv"
 

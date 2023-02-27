@@ -1,9 +1,8 @@
-from dataclasses import dataclass
 import dataclasses
 import datetime
-from typing import Self
 import struct
-
+from dataclasses import dataclass
+from typing import Self
 
 FIELDS = ["temperature", "wind_speed",
           "solar_radiation", "dsp", "drh", "evaporation"]

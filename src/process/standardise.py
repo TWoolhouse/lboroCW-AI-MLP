@@ -1,8 +1,9 @@
-from dataclasses import dataclass
 import struct
+from dataclasses import dataclass
 from typing import Callable, TypeAlias
-from stats import Statistics
+
 from record import Record
+from stats import Statistics
 
 
 @dataclass(frozen=True)

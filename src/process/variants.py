@@ -1,6 +1,6 @@
 import filter
-import standardise
 import split
+import standardise
 
 
 def all():
