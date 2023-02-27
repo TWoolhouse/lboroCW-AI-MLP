@@ -46,6 +46,26 @@
 			],
 			"group": "build",
 			"detail": "Complete run through",
+		},
+		{
+			"label": "MSBuild-Compile",
+			"type": "shell",
+			"command": "msbuild",
+			"problemMatcher": "$msCompile",
+			"args": [
+				"ai.sln",
+				"/p:configuration=Release",
+				"/m",
+				"/verbosity:minimal"
+			],
+			"options": {
+				"env": {
+					"MLP_VARIANT": "default" ,
+					"MLP_BUILD_OPTIONS": "/DMLP_TRAINING /DMLP_HEIGHT=5 /DMLP_ACTIVATION_SIGMOID",
+				}
+			},
+			"group": "build",
+			"detail": "Compiles to satisfy intellisense"
 		}
 	]
 }

@@ -1,0 +1,22 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Train",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/bin/Release/default/mlp.exe",
+			"args": [
+				"default",
+				"data/D.std_dev_3.linear_1-9_e-1.random_60_20_20.bin", // dataset
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"preLaunchTask": "MSBuild-Compile",
+			// "preLaunchTask": "Pre-Process",
+		},
+	]
+}
