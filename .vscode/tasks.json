@@ -1,0 +1,51 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Pre-Process",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/src/process/main.py",
+				"-p",
+			],
+			"group": "build",
+			"detail": "Pre-process the dataset in to multiple variations",
+		},
+		{
+			"label": "Build",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/src/process/main.py",
+				"-b",
+			],
+			"group": "build",
+			"detail": "Compile the Training Program",
+		},
+		{
+			"label": "Train",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/src/process/main.py",
+				"-t",
+			],
+			"group": "build",
+			"detail": "Train the Models",
+		},
+		{
+			"label": "Complete",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/src/process/main.py",
+				"-p",
+				"-b",
+				"-t",
+			],
+			"group": "build",
+			"detail": "Complete run through",
+		}
+	]
+}
