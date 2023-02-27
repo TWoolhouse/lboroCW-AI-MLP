@@ -22,6 +22,7 @@ stateDiagram-v2
 
 	state Model {
 		Input --> Height
+		Height --> Activation
 
 		state Input {
 			5
@@ -33,6 +34,11 @@ stateDiagram-v2
 		state Height {
 			n/2
 			2n
+		}
+
+		state Activation {
+			Sigmoid
+			TanH
 		}
 	}
 
