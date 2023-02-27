@@ -10,18 +10,19 @@
 int main(int argc, const char** argv) {
 	using namespace mlp;
 
-	if (argc < 2) {
-		std::cerr << "[ERROR] USAGE: mlp <dataset>";
+	if (argc < 3) {
+		std::cerr << "[ERROR] USAGE: mlp <variant-name> <dataset>";
 		return -1;
 	}
 
-	std::filesystem::path path{ argv[1] };
-	mlp_log_init(path.stem().generic_string());
+	std::string variant = argv[1];
+	std::filesystem::path path{ argv[2] };
+	mlp_log_init(variant);
 
 	Dataset dataset{ path };
 	mlp_log_info("Dataset: {}", dataset.train.size());
 
-	TrainModel<Record::inputs, Activation::SIGMOID, 7> trainer;
+	TrainModel<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> trainer;
 	std::memset(&trainer, 0, sizeof(trainer));
 
 

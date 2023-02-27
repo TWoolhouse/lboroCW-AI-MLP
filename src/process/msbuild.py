@@ -6,20 +6,25 @@ SOLUTION = "ai.sln"
 EXECUTABLE = "msbuild"
 
 
-async def variant(configuration: Literal["Debug", "Release"] = "Release"):
+async def trainer(variation: str, height: int):
+    return await compile(variation, {
+        "TRAINING": None,
+        "HEIGHT": height,
+    })
+
+
+async def compile(variation: str, defines: dict[str, str | int | None], configuration: Literal["Debug", "Release"] = "Release"):
     cmd = f"{EXECUTABLE} {SOLUTION} /m /verbosity:minimal /p:configuration={configuration}"
 
-    defines: dict[str, str | int | None] = {}
-
     env = {
-        "MLP_VARIANT": "default",
+        "MLP_VARIANT": variation,
         "MLP_BUILD_OPTIONS": "{defines}".format(
             defines=" ".join(
-                f"/D{key}" if value is None else f"/D{key}={value}" for key, value in defines.items())
+                f"/DMLP_{key.upper()}" if value is None else f"/DMLP_{key.upper()}={value}" for key, value in defines.items())
         ),
     }
 
     process = await asyncio.create_subprocess_shell(
         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env={**env, **os.environ})
     stdout, stderr = await process.communicate()
-    return stdout.decode("utf8"), stderr.decode("utf8")
+    return process.returncode, stdout.decode("utf8"), stderr.decode("utf8")

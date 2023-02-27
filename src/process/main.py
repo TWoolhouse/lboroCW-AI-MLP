@@ -57,10 +57,18 @@ async def entry_preprocess():
 
 
 async def entry_build():
-    # for variant in variants.
-    _, stderr = await msbuild.variant()
-    if stderr:
-        print(f"[STDERR]: {stderr}")
+
+    build_jobs = [(height[0], msbuild.trainer(height[0], height[1]))
+                  for height in variants.builds()]
+    print(f"Compiling Trainers: {len(build_jobs)}")
+    builds, jobs = zip(*build_jobs)
+    status = await asyncio.gather(*jobs)
+    for build, result in zip(builds, status):
+        _, _, stderr = result
+        if stderr:
+            raise RuntimeError(f"Failed to Compile: {build} with: {stderr}")
+    for build in builds:
+        print(f"\t{build}")
 
 
 async def entry_train():

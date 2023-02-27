@@ -1,5 +1,6 @@
 #include "log/log.h"
 #include "meta/define.h"
+#include "meta/settings.h"
 
 namespace mlp {}
 

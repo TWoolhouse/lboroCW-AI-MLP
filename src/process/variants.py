@@ -1,4 +1,5 @@
 import filter
+import height
 import split
 import standardise
 
@@ -12,4 +13,5 @@ def datasets():
 
 
 def builds():
-    pass
+    # TODO: Get number of inputs
+    return height.variants(5)
