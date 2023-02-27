@@ -74,13 +74,17 @@ async def entry_train():
     trainers = variants.train()
     print(f"Training: {len(trainers)}")
     with ProcessPoolExecutor(max_workers=4) as pool:
-        jobs = [(name, asyncio.wait_for(asyncio.get_event_loop().run_in_executor(pool, partial(
-            train.spawn, name, filename_fmt(dataset), build)), timeout=None))
+        jobs = [(name, asyncio.get_event_loop().run_in_executor(pool, partial(
+            train.spawn, name, filename_fmt(dataset), build)))
             for name, dataset, build in trainers]
+        for name, job in jobs:
+            job.add_done_callback(
+                partial(lambda name, *_: print(f"\t{name}"), name))
+        coros = [(name, asyncio.wait_for(job, timeout=None))
+                 for name, job in jobs]
         async with asyncio.TaskGroup() as tg:
-            tasks = [(name, tg.create_task(job)) for name, job in jobs]
-    for name, task in tasks:
-        print(f"\t{name}")
+            for _, coro in coros:
+                tg.create_task(coro)
 
 
 async def main(args: argparse.Namespace):
