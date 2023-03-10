@@ -13,8 +13,8 @@ struct Record {
 	uint8_t month, day;
 	FLOAT temperature, wind_speed, solar_radiation, air_pressure, humidity, evaporation;
 
-	std::array<FLOAT, inputs>& as_input() {
-		return *reinterpret_cast<std::array<FLOAT, inputs>*>(&temperature);
+	const std::array<FLOAT, inputs>& as_input() const {
+		return *reinterpret_cast<const std::array<FLOAT, inputs>*>(&temperature);
 	}
 	NODISCARD FLOAT output() const noexcept {
 		return evaporation;

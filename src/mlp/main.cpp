@@ -20,21 +20,23 @@ int main(int argc, const char** argv) {
 	mlp_log_init(variant);
 
 	Dataset dataset{ path };
-	mlp_log_info("Dataset: {}", dataset.train.size());
+	if (!dataset)
+		return -2;
+	mlp_log_info("Dataset: {}, {}, {}", dataset.train.size(), dataset.validate.size(), dataset.test.size());
 
-	TrainModel<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> trainer;
-	std::memset(&trainer, 0, sizeof(trainer));
+
+	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model;
+
+	auto rmse = model.forward(dataset.validate);
+	mlp_log_info("Validation MSE: {:0<20}%", rmse * 100.0);
+
+	auto trainer = Trainer(model);
 
 
 	FLOAT squared_error = 0;
-	for (auto& record : dataset.train) {
-		auto error = trainer.train(record.as_input(), record.evaporation);
-		squared_error += error * error;
-	}
-	mlp_log_info("EPOCH: {:0>3} --- MSE: {:0<20}%", 1, squared_error / dataset.train.size() * 100.0);
-
-	constexpr size_t ITERATIONS = 500;
-	constexpr size_t BATCH_SIZE = 1000;
+	constexpr size_t EPOCHS = 10000;
+	constexpr size_t ITERATIONS = EPOCHS / 100;
+	constexpr size_t BATCH_SIZE = EPOCHS / ITERATIONS;
 	for (size_t j = 0; j < ITERATIONS; j++) {
 		for (size_t i = 0; i < BATCH_SIZE; i++) {
 			squared_error = 0;
@@ -43,7 +45,7 @@ int main(int argc, const char** argv) {
 				squared_error += error * error;
 			}
 		}
-		mlp_log_info("Epoch: {:0>3} K - MSE: {:0<20}%", j, squared_error / dataset.train.size() * 100.0);
+		mlp_log_info("Epoch: {:0>3}00 - MSE: {:0<20}%", j + 1, squared_error / dataset.train.size() * 100.0);
 
 		FLOAT acc_err = 0;
 		auto model = trainer.model();

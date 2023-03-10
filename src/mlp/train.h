@@ -10,7 +10,7 @@ constexpr FLOAT learning_rate = 0.005;
 namespace mlp {
 
 	template<size_t Inputs, Activation Activator, size_t Height>
-	class TrainModel {
+	class Trainer {
 		template<size_t Size>
 		struct Cell {
 			Node<Size, Activator> node;
@@ -74,6 +74,13 @@ namespace mlp {
 				nodes[i] = layer[i].node;
 			}
 			return Model<Inputs, Activator, Height>{ std::move(nodes), output.node };
+		}
+
+		Trainer(const Model<Inputs, Activator, Height>& model): layer(), output() {
+			for (size_t i = 0; i < Height; ++i) {
+				layer[i].node = model.layer[i];
+			}
+			output.node = model.output;
 		}
 	};
 
