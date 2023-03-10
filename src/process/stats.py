@@ -1,6 +1,6 @@
 import dataclasses
 from math import sqrt
-from typing import Collection, TypeAlias
+from typing import Collection, Sequence, TypeAlias
 
 from record import FIELDS, Record
 
@@ -54,6 +54,6 @@ def standard_deviation(collection: Collection[float]) -> float:
     return sqrt(variance)
 
 
-def quartile(collection: Collection[float], sector: float) -> float:
+def quartile(collection: Sequence[float], sector: float) -> float:
     assert 0 <= sector <= 1, "Sector must be in the range [0, 1]"
     return collection[int(sector * len(collection))]
