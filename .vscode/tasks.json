@@ -54,13 +54,13 @@
 			"problemMatcher": "$msCompile",
 			"args": [
 				"ai.sln",
-				"/p:configuration=Release",
+				"/p:configuration=Debug",
 				"/m",
 				"/verbosity:minimal"
 			],
 			"options": {
 				"env": {
-					"MLP_VARIANT": "default" ,
+					"MLP_VARIANT": "default",
 					"MLP_BUILD_OPTIONS": "/DMLP_TRAINING /DMLP_HEIGHT=5 /DMLP_ACTIVATION_SIGMOID",
 				}
 			},

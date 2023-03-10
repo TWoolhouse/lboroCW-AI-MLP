@@ -8,7 +8,7 @@
 			"name": "Train",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bin/Release/default/mlp.exe",
+			"program": "${workspaceFolder}/bin/Debug/default/mlp.exe",
 			"args": [
 				"default",
 				"data/D.std_dev_3.linear_1-9_e-1.random_60_20_20.bin", // dataset
