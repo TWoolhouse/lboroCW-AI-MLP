@@ -1,8 +1,11 @@
 from itertools import cycle
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 from record import FIELDS, Record
 from standardise import Encoding
+
+Path("graph/dataset").resolve().mkdir(parents=True, exist_ok=True)
 
 
 def processed(name: str, encodings: list[Encoding], train: list[Record], validate: list[Record], test: list[Record]):
@@ -36,4 +39,5 @@ def dataset(name: str, dataset: list[Record]):
                   ".", markersize=1, color=colour)
         axes.set_ylabel(field.replace("_", " ").title())
 
+    print(f"\t{name}")
     fig.savefig(f"./graph/dataset/{name}.png", dpi=100)
