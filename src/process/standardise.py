@@ -1,6 +1,6 @@
 import struct
 from dataclasses import dataclass
-from typing import Callable, TypeAlias
+from typing import Callable, Self, TypeAlias
 
 from record import Record
 from stats import Statistics
@@ -13,8 +13,24 @@ class Encoding:
     lower: float
     upper: float
 
+    def encode(self, x: float) -> float:
+        norm = (x - self.min) / (self.max - self.min)
+        return norm * (self.upper - self.lower) + self.lower
+
+    def decode(self, x: float) -> float:
+        norm = (x - self.lower) / (self.upper - self.lower)
+        return norm * (self.max - self.min) + self.min
+
+    @staticmethod
+    def fmt():
+        return struct.Struct("@dddd")
+
     def serialise(self) -> bytes:
-        return struct.pack("@dddd", self.min, self.max, self.lower, self.upper)
+        return self.fmt().pack(self.min, self.max, self.lower, self.upper)
+
+    @classmethod
+    def deserialise(cls, file) -> Self:
+        return cls(*cls.fmt().unpack_from(file.read(cls.fmt().size)))
 
 
 Variant: TypeAlias = Callable[[

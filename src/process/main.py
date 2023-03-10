@@ -6,18 +6,18 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from traceback import print_exc
 
+import dataset
 import msbuild
 import stats
 import train
 import variants
+from dataset import filename_fmt
 from record import Record
 from variants import variant_name
 
+import graph
+
 FILENAME_RAW = "data/raw.csv"
-
-
-def filename_fmt(variant: str) -> str:
-    return f"data/D.{variant}.bin"
 
 
 async def entry_preprocess():
@@ -43,17 +43,8 @@ async def entry_preprocess():
         size = len(dataset_train) + len(dataset_validate) + len(dataset_test)
         print(
             f"\t{name: <50} {size} {size / len(dataset_raw) * 100:0>.2f}% - {len(dataset_train)}, {len(dataset_validate)}, {len(dataset_test)}")
-        with open(filename_fmt(name), "wb") as file:
-            file.write(struct.pack("@NNN", len(dataset_train),
-                                   len(dataset_validate), len(dataset_test)))
-            for encoding in encodings:
-                file.write(encoding.serialise())
-            for rec in dataset_train:
-                file.write(rec.serialise())
-            for rec in dataset_validate:
-                file.write(rec.serialise())
-            for rec in dataset_test:
-                file.write(rec.serialise())
+        dataset.serialise(name, encodings, dataset_train,
+                          dataset_validate, dataset_test)
 
 
 async def entry_build():
@@ -79,7 +70,7 @@ async def entry_train():
             for name, dataset, build in trainers]
         for name, job in jobs:
             job.add_done_callback(
-                partial(lambda name, *_: print(f"\t{name}"), name))
+                partial(lambda name, value, *_: print(f"\t{value.result()} - {name}"), name))
         coros = [(name, asyncio.wait_for(job, timeout=None))
                  for name, job in jobs]
         async with asyncio.TaskGroup() as tg:
@@ -87,14 +78,26 @@ async def entry_train():
                 tg.create_task(coro)
 
 
+async def entry_analyse_dataset():
+    pass
+
+
+async def entry_analyse_model():
+    pass
+
+
 async def main(args: argparse.Namespace):
     try:
-        if (args.preprocess):
+        if args.preprocess:
             await entry_preprocess()
-        if (args.build):
+        if args.analyse_dataset:
+            await entry_analyse_dataset()
+        if args.build:
             await entry_build()
-        if (args.train):
+        if args.train:
             await entry_train()
+        if args.analyse_model:
+            await entry_analyse_model()
     except Exception:
         print_exc()
 
@@ -106,5 +109,9 @@ if __name__ == "__main__":
                         help="Build the training executables")
     parser.add_argument("-t", "--train", action="store_true",
                         help="Train the models")
+    parser.add_argument("-ad", "--analyse-dataset", action="store_true",
+                        help="Analyse the raw dataset and all generated datasets")
+    parser.add_argument("-am", "--analyse-model", action="store_true",
+                        help="Analyse the models training results")
 
     asyncio.run(main(parser.parse_args()))

@@ -36,12 +36,19 @@ class Record:
         except ValueError:
             return
 
-    def serialise(self) -> bytes:
+    @staticmethod
+    def fmt():
         # uint16, uint8 * 2, double * 6
-        return struct.pack("@HBBdddddd",
-                           self.date.year, self.date.month, self.date.day,
-                           self.temperature, self.wind_speed, self.solar_radiation, self.air_pressure, self.humidity, self.evaporation
-                           )
+        return struct.Struct("@HBBdddddd")
+
+    def serialise(self) -> bytes:
+        return self.fmt().pack(self.date.year, self.date.month, self.date.day,
+                               self.temperature, self.wind_speed, self.solar_radiation, self.air_pressure, self.humidity, self.evaporation)
+
+    @classmethod
+    def deserialise(cls, file) -> Self:
+        data = cls.fmt().unpack_from(file.read(cls.fmt().size))
+        return cls(datetime.date(data[0], data[1], data[2]), *data[3:])
 
 
 FIELDS = [field.name for field in dataclasses.fields(
