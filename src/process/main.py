@@ -7,6 +7,7 @@ from functools import partial
 from traceback import print_exc
 
 import dataset
+import graph
 import msbuild
 import stats
 import train
@@ -14,8 +15,6 @@ import variants
 from dataset import filename_fmt
 from record import Record
 from variants import variant_name
-
-import graph
 
 FILENAME_RAW = "data/raw.csv"
 
@@ -79,7 +78,7 @@ async def entry_train():
 
 
 async def entry_analyse_dataset():
-        graphs = variants.datasets()
+    graphs = variants.datasets()
     # 2 per dataset (std, as is) & 1 raw input
     print(f"Graphing Datasets: {len(graphs) * 2 + 1}")
     for (filter, _), (standardise, _), (split, _) in graphs:
