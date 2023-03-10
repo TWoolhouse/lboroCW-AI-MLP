@@ -79,7 +79,13 @@ async def entry_train():
 
 
 async def entry_analyse_dataset():
-    pass
+        graphs = variants.datasets()
+    # 2 per dataset (std, as is) & 1 raw input
+    print(f"Graphing Datasets: {len(graphs) * 2 + 1}")
+    for (filter, _), (standardise, _), (split, _) in graphs:
+        name = variant_name(filter, standardise, split)
+        encodings, (train, validate, test) = dataset.deserialise(name)
+        graph.processed(name, encodings, train, validate, test)
 
 
 async def entry_analyse_model():
