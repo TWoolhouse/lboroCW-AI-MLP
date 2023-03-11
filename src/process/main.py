@@ -88,7 +88,11 @@ async def entry_analyse_dataset():
 
 
 async def entry_analyse_model():
-    pass
+    trainers = variants.train()
+    print(f"Graphing Model Training: {len(trainers)}")
+    for name, dataset, build in trainers:
+        print(f"\t{name}")
+        graph.model_training(name)
 
 
 async def main(args: argparse.Namespace):

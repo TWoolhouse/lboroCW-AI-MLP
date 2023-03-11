@@ -1,5 +1,6 @@
 #include "log.h"
 #include "../meta.h"
+#include "../model.h"
 
 #include <fstream>
 #include <filesystem>
@@ -9,11 +10,11 @@ namespace mlp::log {
 	struct Recorder {
 		std::ofstream file;
 		Recorder(std::filesystem::path path, bool training): file([&]() { std::filesystem::create_directories(path.parent_path()); return path; }()) {
-			file << (training ? "error_training,error_validation" : "testing") << std::endl;
+			file << (training ? "epoch,error_training,error_validation" : "testing") << std::endl;
 		}
 
 		void train(size_t epoch, FLOAT training, FLOAT validation) {
-			file << mlp_fmt("{},{}", training, validation) << std::endl;
+			file << mlp_fmt("{},{},{}", epoch, training, validation) << std::endl;
 			mlp_log_info("Epoch: {:0>5} - RMSE: Train[{:0<20}] Validation[{:0<20}]", epoch, training, validation);
 		}
 

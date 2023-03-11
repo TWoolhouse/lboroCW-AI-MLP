@@ -1,3 +1,4 @@
+import csv
 from itertools import cycle
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from record import FIELDS, Record
 from standardise import Encoding
 
 Path("graph/dataset").resolve().mkdir(parents=True, exist_ok=True)
+Path("graph/model").resolve().mkdir(parents=True, exist_ok=True)
 
 
 def processed(name: str, encodings: list[Encoding], train: list[Record], validate: list[Record], test: list[Record]):
@@ -41,3 +43,24 @@ def dataset(name: str, dataset: list[Record]):
 
     print(f"\t{name}")
     fig.savefig(f"./graph/dataset/{name}.png", dpi=100)
+
+
+def model_training(name: str):
+    def extract(row):
+        try:
+            return tuple(map(float, row))
+        except ValueError:
+            return None
+
+    with open(f"model/training/{name}.log") as file:
+        results = [row for r in csv.reader(
+            file) if (row := extract(r)) is not None]
+
+    epochs, error_train, error_validate = zip(*results)
+
+    fig, ax = plt.subplots(1)
+
+    for data, colour in zip([error_train, error_validate], ["red", "blue"]):
+        ax.plot(epochs, data, color=colour)
+
+    fig.savefig(f"graph/model/{name}.png")
