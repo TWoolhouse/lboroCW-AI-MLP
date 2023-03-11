@@ -8,8 +8,8 @@
 #include "log/record.h"
 
 constexpr size_t EPOCHS = 10000;
-constexpr size_t ITERATIONS = EPOCHS / 100;
-constexpr size_t BATCH_SIZE = EPOCHS / ITERATIONS;
+constexpr size_t BATCH_SIZE = EPOCHS / 100;
+constexpr size_t ITERATIONS = EPOCHS / BATCH_SIZE;
 
 // mlp <variant-name> <dataset>
 int main(int argc, const char** argv) {
@@ -34,11 +34,12 @@ int main(int argc, const char** argv) {
 	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model;
 
 	auto mse = model.forward(dataset.validate);
-	mlp_log_info("Validation RMSE: {:0<20}%", std::sqrt(mse));
+	mlp_log_info("Validation RMSE: {:0<20}", std::sqrt(mse));
 
 	auto trainer = Trainer(model);
 
-	log::Recorder recorder(mlp_fmt("model/training/{}.log", variant), true);
+	log::Recorder recorder_error(mlp_fmt("model/training/{}.log", variant), true);
+	log::RecorderModel recorder_model(mlp_fmt("model/bin/{}/", variant));
 
 	for (size_t j = 0; j < ITERATIONS; j++) {
 		FLOAT acc;
@@ -49,10 +50,13 @@ int main(int argc, const char** argv) {
 				acc += error * error;
 			}
 		}
+		auto m = trainer.model();
 		auto error_training = std::sqrt(acc / dataset.train.size());
-		auto error_validation = std::sqrt(trainer.model().forward(dataset.validate));
+		auto error_validation = std::sqrt(m.forward(dataset.validate));
 
-		recorder.train((j + 1) * BATCH_SIZE, error_training, error_validation);
+		auto epochs = (j + 1) * BATCH_SIZE;
+		recorder_error.train(epochs, error_training, error_validation);
+		recorder_model.model(m, epochs);
 	}
 
 	return 0;

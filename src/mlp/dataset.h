@@ -15,9 +15,9 @@ namespace mlp {
 		Set train, validate, test;
 
 		Dataset(std::filesystem::path path) {
-			std::ifstream file;
-			file.exceptions(std::ios::failbit | std::ios::badbit);
 			try {
+				std::ifstream file;
+				file.exceptions(std::ios::failbit | std::ios::badbit);
 				file.open(path, std::ifstream::in | std::ifstream::binary);
 				Set* sets[] = { &train, &validate, &test };
 				for (auto set : sets) {
