@@ -7,7 +7,6 @@ from functools import partial
 from traceback import print_exc
 
 import dataset
-import graph
 import msbuild
 import stats
 import train
@@ -15,6 +14,8 @@ import variants
 from dataset import filename_fmt
 from record import Record
 from variants import variant_name
+
+import graph
 
 FILENAME_RAW = "data/raw.csv"
 
@@ -92,7 +93,7 @@ async def entry_analyse_model():
     print(f"Graphing Model Training: {len(trainers)}")
     for name, dataset, build in trainers:
         print(f"\t{name}")
-        graph.model_training(name)
+        graph.model_training(name, build)
 
 
 async def main(args: argparse.Namespace):

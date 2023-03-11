@@ -43,9 +43,10 @@ def dataset(name: str, dataset: list[Record]):
 
     print(f"\t{name}")
     fig.savefig(f"./graph/dataset/{name}.png", dpi=100)
+    plt.close(fig)
 
 
-def model_training(name: str):
+def model_training(name: str, model_name: str):
     def extract(row):
         try:
             return tuple(map(float, row))
@@ -60,7 +61,12 @@ def model_training(name: str):
 
     fig, ax = plt.subplots(1)
 
-    for data, colour in zip([error_train, error_validate], ["red", "blue"]):
-        ax.plot(epochs, data, color=colour)
+    for (dname, data), colour in zip([("Training", error_train), ("Validation", error_validate)], ["red", "blue"]):
+        ax.plot(epochs, data, color=colour, label=dname.title())
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("RMSE")
+        ax.set_title(model_name)
 
+    fig.legend()
     fig.savefig(f"graph/model/{name}.png")
+    plt.close(fig)
