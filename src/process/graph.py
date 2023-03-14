@@ -46,7 +46,7 @@ def dataset(name: str, dataset: list[Record]):
     plt.close(fig)
 
 
-def model_training(name: str, model_name: str):
+def model_training(name: str, name_ds: str, name_model: str):
     def extract(row):
         try:
             return tuple(map(float, row))
@@ -65,7 +65,7 @@ def model_training(name: str, model_name: str):
         ax.plot(epochs, data, color=colour, label=dname.title())
         ax.set_xlabel("Epoch")
         ax.set_ylabel("RMSE")
-        ax.set_title(model_name)
+        ax.set_title(f"{name_ds}\n{name_model}")
 
     fig.legend()
     fig.savefig(f"graph/model/{name}.png")

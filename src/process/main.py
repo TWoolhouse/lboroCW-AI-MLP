@@ -93,7 +93,7 @@ async def entry_analyse_model():
     print(f"Graphing Model Training: {len(trainers)}")
     for name, dataset, build in trainers:
         print(f"\t{name}")
-        graph.model_training(name, build)
+        graph.model_training(name, dataset, build)
 
 
 async def main(args: argparse.Namespace):

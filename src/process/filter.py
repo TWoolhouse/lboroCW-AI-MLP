@@ -40,5 +40,9 @@ def variant_inter_quartile_range(deviations: int) -> Variant:
 
 VARIANTS: dict[str, Variant] = {
     "std_dev_3": variant_standard_deviation(3),
-    "iqr_3": variant_standard_deviation(3),
+    # "std_dev_2": variant_standard_deviation(2),
+    # "std_dev_1": variant_standard_deviation(1),
+    "iqr_3": variant_inter_quartile_range(3),
+    # "iqr_2": variant_inter_quartile_range(2),
+    # "iqr_1": variant_inter_quartile_range(1),
 }
