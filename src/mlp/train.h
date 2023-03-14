@@ -5,7 +5,7 @@
 #include "model.h"
 #include "activation.h"
 
-// #define MLP_TRAIN_MOMENTUM 0.9
+#define MLP_TRAIN_MOMENTUM 0.9
 // #define MLP_TRAIN_BOlD_DRIVER
 // #define MLP_TRAIN_ANNEALING
 // #define MLP_TRAIN_WEIGHT_DECAY
@@ -15,8 +15,10 @@ namespace mlp {
 
 	template<size_t Inputs, Activation Activator, size_t Height>
 	class Trainer {
-		static constexpr FLOAT learning_rate = 0.005;
-		static constexpr FLOAT momentum_weight = 0.9;
+		FLOAT learning_rate = 0.005;
+		#ifdef MLP_TRAIN_MOMENTUM
+		static constexpr FLOAT momentum_weight = MLP_TRAIN_MOMENTUM;
+		#endif // MLP_TRAIN_MOMENTUM
 
 		template<size_t Size>
 		struct Cell {
@@ -133,9 +135,9 @@ namespace mlp {
 			std::array<Node<Inputs, Activator>, Height> nodes;
 			for (size_t i = 0; i < Height; ++i) {
 				nodes[i] = layer[i].node;
-	}
+			}
 			return Model<Inputs, Activator, Height>{ std::move(nodes), output.node };
-}
+		}
 
 		Trainer(const Model<Inputs, Activator, Height>& model): layer(), output() {
 			for (size_t i = 0; i < Height; ++i) {
