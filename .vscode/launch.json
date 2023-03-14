@@ -16,7 +16,6 @@
 			"cwd": "${workspaceFolder}",
 			"console": "integratedTerminal",
 			"preLaunchTask": "MSBuild-Compile",
-			// "preLaunchTask": "Pre-Process",
 		},
 	]
 }
