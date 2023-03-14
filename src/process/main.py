@@ -54,9 +54,10 @@ async def entry_build():
     builds, jobs = zip(*build_jobs)
     status = await asyncio.gather(*jobs)
     for build, result in zip(builds, status):
-        _, _, stderr = result
-        if stderr:
-            raise RuntimeError(f"Failed to Compile: {build} with: {stderr}")
+        error_code, stdout, stderr = result
+        if error_code != 0 or stderr:
+            raise RuntimeError(
+                f"Failed to Compile: {build} with: {stdout}\n{stderr}")
     for build in builds:
         print(f"\t{build}")
 

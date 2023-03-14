@@ -1,4 +1,5 @@
 def values(inputs: int):
+    # return [inputs, inputs * 2]
     return range(inputs, inputs * 2 + 1)
 
 
