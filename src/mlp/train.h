@@ -5,12 +5,19 @@
 #include "model.h"
 #include "activation.h"
 
-constexpr FLOAT learning_rate = 0.005;
+// #define MLP_TRAIN_MOMENTUM 0.9
+// #define MLP_TRAIN_BOlD_DRIVER
+// #define MLP_TRAIN_ANNEALING
+// #define MLP_TRAIN_WEIGHT_DECAY
+
 
 namespace mlp {
 
 	template<size_t Inputs, Activation Activator, size_t Height>
 	class Trainer {
+		static constexpr FLOAT learning_rate = 0.005;
+		static constexpr FLOAT momentum_weight = 0.9;
+
 		template<size_t Size>
 		struct Cell {
 			Node<Size, Activator> node;
@@ -19,13 +26,42 @@ namespace mlp {
 			};
 			FLOAT activated;
 
+			#ifdef MLP_TRAIN_MOMENTUM
+			struct Momentum {
+				FLOAT bias;
+				std::array<FLOAT, Size> weights;
+
+				constexpr FLOAT& remap(FLOAT& node_ptr) {
+					auto ptr = reinterpret_cast<uint8_t*>(&node_ptr);
+					return *reinterpret_cast<FLOAT*>(ptr + offset());
+				}
+			protected:
+				static constexpr auto offset() {
+					return offsetof(Cell, momentum) - offsetof(Cell, node);
+				}
+			} momentum;
+			#endif // MLP_TRAIN_MOMENTUM
+
+
+			// Forward pass of a single Node
 			auto forward(const std::array<FLOAT, Size>& inputs) {
 				sum = node.compute(inputs);
 				activated = node.activate(sum);
 				return activated;
 			}
-			void backward(FLOAT weight, FLOAT up_delta) {
-				delta = weight * up_delta * node.differential(sum);
+
+			static constexpr FLOAT backward_error(FLOAT correct, FLOAT guess) {
+				#ifdef MLP_TRAIN_WEIGHT_DECAY
+				#else // !MLP_TRAIN_WEIGHT_DECAY
+				return correct - guess;
+				#endif // MLP_TRAIN_WEIGHT_DECAY
+			}
+
+			void backward_delta_output(FLOAT correct) {
+				delta = backward_error(correct, activated) * node.differential(sum);
+			}
+			void backward_delta_hidden(FLOAT fwd_delta, FLOAT fwd_weight) {
+				delta = fwd_weight * fwd_delta * node.differential(sum);
 			}
 		};
 	protected:
@@ -33,38 +69,63 @@ namespace mlp {
 		Cell<Height> output;
 
 	public:
+		// Forward & Backward Pass
 		FLOAT train(const std::array<FLOAT, Inputs>& inputs, FLOAT correct) {
 			auto guess = forward(inputs);
-			backward(inputs, guess, correct);
-			return guess - correct;
+			backward(inputs, correct);
+			return correct - guess;
+		}
+
+		FLOAT bold_driver() {
+			// TODO: Edit learning rate
 		}
 
 	protected:
+		// Forwards pass
 		FLOAT forward(const std::array<FLOAT, Inputs>& inputs) {
 			auto hidden = forward_hidden(inputs);
 			return output.forward(hidden);
 		}
 
+		// Forward pass for the hidden layer
 		std::array<FLOAT, Height> forward_hidden(const std::array<FLOAT, Inputs>& inputs) {
 			std::array<FLOAT, Height> outputs;
-			auto out_it = outputs.data();
+			auto it = outputs.data();
 			for (auto& cell : layer) {
-				*out_it++ = cell.forward(inputs);
+				*it++ = cell.forward(inputs);
 			}
 			return outputs;
 		}
 
-		void backward(const std::array<FLOAT, Inputs>& inputs, FLOAT guess, FLOAT correct) {
-			output.delta = (correct - guess) * output.node.differential(output.sum);
-			auto it_weight = output.node.weights.rbegin();
-			for (auto it = layer.rbegin(); it < layer.rend(); ++it) {
-				it->backward(*it_weight, output.delta);
-				it->node.bias += learning_rate * it->delta;
-				auto node_weight = it->node.weights.begin();
-				for (auto input = inputs.begin(); input < inputs.end(); ++input)
-					*(node_weight++) += learning_rate * it->delta * *input;
-				*(it_weight++) += learning_rate * output.delta * it->activated;
+		void backward(const std::array<FLOAT, Inputs>& inputs, FLOAT correct) {
+			output.backward_delta_output(correct);
+			auto it_weight_out = output.node.weights.rbegin();
+			for (auto it_cell = layer.rbegin(); it_cell < layer.rend(); ++it_cell) {
+				it_cell->backward_delta_hidden(output.delta, *it_weight_out);
+				backward_update_bias(it_cell->node.bias, *it_cell);
+				auto it_weight_node = it_cell->node.weights.begin();
+				for (auto it_input = inputs.begin(); it_input < inputs.end(); ++it_input)
+					backward_update_weight(*it_weight_node++, *it_cell, *it_input);
+				backward_update_weight(*it_weight_out++, output, it_cell->activated);
 			}
+			backward_update_bias(output.node.bias, output);
+		}
+
+		template<size_t Size>
+		void backward_update_weight(FLOAT& weight, Cell<Size>& cell, FLOAT input) {
+			#ifdef MLP_TRAIN_MOMENTUM
+			auto old = weight;
+			auto& momentum = cell.momentum.remap(weight);
+			weight += learning_rate * cell.delta * input + momentum_weight * momentum;
+			momentum = weight - old;
+			#else // !MLP_TRAIN_MOMENTUM
+			weight += learning_rate * cell.delta * input;
+			#endif // MLP_TRAIN_MOMENTUM
+		}
+
+		template<size_t Size>
+		auto backward_update_bias(FLOAT& bias, Cell<Size>& cell) {
+			return backward_update_weight(bias, cell, 1);
 		}
 
 	public:
@@ -72,9 +133,9 @@ namespace mlp {
 			std::array<Node<Inputs, Activator>, Height> nodes;
 			for (size_t i = 0; i < Height; ++i) {
 				nodes[i] = layer[i].node;
-			}
+	}
 			return Model<Inputs, Activator, Height>{ std::move(nodes), output.node };
-		}
+}
 
 		Trainer(const Model<Inputs, Activator, Height>& model): layer(), output() {
 			for (size_t i = 0; i < Height; ++i) {

@@ -7,7 +7,7 @@
 #include "train.h"
 #include "log/record.h"
 
-constexpr size_t EPOCHS = 10000;
+constexpr size_t EPOCHS = 2000;
 constexpr size_t BATCH_SIZE = EPOCHS / 100;
 constexpr size_t ITERATIONS = EPOCHS / BATCH_SIZE;
 
