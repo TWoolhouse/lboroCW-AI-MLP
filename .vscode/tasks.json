@@ -41,8 +41,10 @@
 			"args": [
 				"${workspaceFolder}/src/process/main.py",
 				"-p",
+				"-ad",
 				"-b",
 				"-t",
+				"-am",
 			],
 			"group": "build",
 			"detail": "Complete run through",
