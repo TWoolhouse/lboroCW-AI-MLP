@@ -32,6 +32,7 @@ MAPPINGS = {
 print(f"Compiling: {len(markdown_files)}")
 for input, output in markdown_files:
     print(f"\t{input}")
+    output.parent.mkdir(parents=True, exist_ok=True)
     with open(input, "r") as file:
         content = file.read()
         for k, v in MAPPINGS.items():
