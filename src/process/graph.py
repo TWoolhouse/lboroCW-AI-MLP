@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Collection
 
 import matplotlib.pyplot as plt
+import numpy
 from record import FIELDS, Record
 from standardise import Encoding
 
@@ -66,25 +67,36 @@ def model_training(name: str, name_ds: str, name_model: str):
     columns = tuple(zip(*results))
     epochs, error_train, error_validate, learning_rate = columns[:4]
 
-    fig, axes = plt.subplots(2)
     ds = [
         ("Training", error_train),
         ("Validation", error_validate),
         ("Learning Rate", learning_rate),
     ]
 
-    ax = axes[0]
-    for (dname, data), colour in zip(ds[:2], cycle(["red", "blue", "purple"])):
-        ax.plot(epochs, data, color=colour, label=dname.title())
-        ax.set_xlabel("Epoch")
-        ax.set_ylabel("RMSE")
-        ax.set_title(f"{name_ds}\n{name_model}", pad=20, loc="left")
+    def graph_error(ax):
+        for (dname, data), colour in zip(ds[:2], cycle(["red", "blue", "purple"])):
+            ax.plot(epochs, data, color=colour, label=dname.title())
+            ax.set_xlabel("Epoch")
+            ax.set_ylabel("RMSE")
+            ax.set_title(f"{name_ds}\n{name_model}", pad=20, loc="left")
 
-    ax = axes[1]
-    for (dname, data), colour in zip([ds[2]], cycle(["purple"])):
-        ax.plot(epochs, data, color=colour)
-        ax.set_xlabel("Epoch")
-        ax.set_ylabel("Learning Rate")
+    def graph_learning_rate(ax):
+        for (dname, data), colour in zip([ds[2]], cycle(["purple"])):
+            ax.plot(epochs, data, color=colour)
+            ax.set_xlabel("Epoch")
+            ax.set_ylabel("Learning Rate")
+
+    plotting = [func for func, pred in [
+        (graph_error, lambda: True),
+        (graph_learning_rate, lambda: "bold_driver" in name_model),
+    ] if pred()]
+
+    fig, axes = plt.subplots(len(plotting))
+    if not isinstance(axes, numpy.ndarray):
+        axes = [axes]
+
+    for ax, func in zip(axes, plotting):
+        func(ax)
 
     fig.legend()
     fig.tight_layout(h_pad=0.5)
