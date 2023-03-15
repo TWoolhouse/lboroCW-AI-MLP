@@ -6,7 +6,7 @@
 #include "activation.h"
 
 // #define MLP_TRAIN_MOMENTUM 0.9
-#define MLP_TRAIN_BOlD_DRIVER
+// #define MLP_TRAIN_BOLD_DRIVER
 // #define MLP_TRAIN_ANNEALING
 // #define MLP_TRAIN_WEIGHT_DECAY
 
@@ -83,10 +83,10 @@ namespace mlp {
 
 		// Run the bold driver to edit the learning parameter
 		void bold_driver(bool improved) {
-			#ifdef MLP_TRAIN_BOlD_DRIVER
+			#ifdef MLP_TRAIN_BOLD_DRIVER
 			FLOAT modifier = improved ? 1.01 : 0.97;
 			learning_rate = std::clamp(learning_rate * modifier, 0.001, 0.5);
-			#endif // MLP_TRAIN_BOlD_DRIVER
+			#endif // MLP_TRAIN_BOLD_DRIVER
 		}
 
 	protected:

@@ -50,9 +50,9 @@ int main(int argc, const char** argv) {
 				auto error = trainer.train(record.as_input(), record.output());
 				acc += error * error;
 			}
-			#ifdef MLP_TRAIN_BOlD_DRIVER
+			#ifdef MLP_TRAIN_BOLD_DRIVER
 			trainer.bold_driver(error_previous >= acc);
-			#endif // MLP_TRAIN_BOlD_DRIVER
+			#endif // MLP_TRAIN_BOLD_DRIVER
 		}
 		auto m = trainer.model();
 		auto error_training = std::sqrt(acc / dataset.train.size());
