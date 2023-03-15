@@ -1,25 +1,28 @@
+from typing import Optional
+
 import activation
-import filter
+import filter as filter_
 import height
+import modification
 import split
 import standardise
 
 
-def variant_name(*variants: str) -> str:
-    return ".".join(variants)
+def variant_name(*variants: Optional[str]) -> str:
+    return ".".join(filter(None, variants))
 
 
 def all():
-    return filter.VARIANTS, standardise.VARIANTS, split.VARIANTS
+    return filter_.VARIANTS, standardise.VARIANTS, split.VARIANTS
 
 
 def datasets():
-    return [(i, j, k) for i in filter.VARIANTS.items() for j in standardise.VARIANTS.items() for k in split.VARIANTS.items()]
+    return [(i, j, k) for i in filter_.VARIANTS.items() for j in standardise.VARIANTS.items() for k in split.VARIANTS.items()]
 
 
 def builds():
     # TODO: Get number of inputs
-    return [(i, j) for i in height.variants(5) for j in activation.VARIANTS.items()]
+    return [(i, j, k) for i in height.variants(5) for j in activation.VARIANTS.items() for k in modification.VARIANTS.items()]
 
 
 def train():

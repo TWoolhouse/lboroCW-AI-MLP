@@ -1,6 +1,7 @@
 import csv
 from itertools import cycle
 from pathlib import Path
+from typing import Collection
 
 import matplotlib.pyplot as plt
 from record import FIELDS, Record
@@ -57,16 +58,35 @@ def model_training(name: str, name_ds: str, name_model: str):
         results = [row for r in csv.reader(
             file) if (row := extract(r)) is not None]
 
-    epochs, error_train, error_validate = zip(*results)
+    def standardise(data: Collection[float]) -> list[float]:
+        a, b = min(data), max(data)
+        rng = b - a
+        return [(v - a) / rng for v in data]
 
-    fig, ax = plt.subplots(1)
+    columns = tuple(zip(*results))
+    epochs, error_train, error_validate, learning_rate = columns[:4]
 
-    for (dname, data), colour in zip([("Training", error_train), ("Validation", error_validate)], ["red", "blue"]):
+    fig, axes = plt.subplots(2)
+    ds = [
+        ("Training", error_train),
+        ("Validation", error_validate),
+        ("Learning Rate", learning_rate),
+    ]
+
+    ax = axes[0]
+    for (dname, data), colour in zip(ds[:2], cycle(["red", "blue", "purple"])):
         ax.plot(epochs, data, color=colour, label=dname.title())
         ax.set_xlabel("Epoch")
         ax.set_ylabel("RMSE")
-        ax.set_title(f"{name_ds}\n{name_model}")
+        ax.set_title(f"{name_ds}\n{name_model}", pad=20, loc="left")
+
+    ax = axes[1]
+    for (dname, data), colour in zip([ds[2]], cycle(["purple"])):
+        ax.plot(epochs, data, color=colour)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Learning Rate")
 
     fig.legend()
+    fig.tight_layout(h_pad=0.5)
     fig.savefig(f"graph/model/{name}.png")
     plt.close(fig)

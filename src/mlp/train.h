@@ -5,8 +5,8 @@
 #include "model.h"
 #include "activation.h"
 
-#define MLP_TRAIN_MOMENTUM 0.9
-// #define MLP_TRAIN_BOlD_DRIVER
+// #define MLP_TRAIN_MOMENTUM 0.9
+#define MLP_TRAIN_BOlD_DRIVER
 // #define MLP_TRAIN_ANNEALING
 // #define MLP_TRAIN_WEIGHT_DECAY
 
@@ -15,7 +15,9 @@ namespace mlp {
 
 	template<size_t Inputs, Activation Activator, size_t Height>
 	class Trainer {
+	public:
 		FLOAT learning_rate = 0.005;
+	protected:
 		#ifdef MLP_TRAIN_MOMENTUM
 		static constexpr FLOAT momentum_weight = MLP_TRAIN_MOMENTUM;
 		#endif // MLP_TRAIN_MOMENTUM
@@ -75,11 +77,16 @@ namespace mlp {
 		FLOAT train(const std::array<FLOAT, Inputs>& inputs, FLOAT correct) {
 			auto guess = forward(inputs);
 			backward(inputs, correct);
-			return correct - guess;
+			auto error = correct - guess;
+			return error;
 		}
 
-		FLOAT bold_driver() {
-			// TODO: Edit learning rate
+		// Run the bold driver to edit the learning parameter
+		void bold_driver(bool improved) {
+			#ifdef MLP_TRAIN_BOlD_DRIVER
+			FLOAT modifier = improved ? 1.01 : 0.97;
+			learning_rate = std::clamp(learning_rate * modifier, 0.001, 0.5);
+			#endif // MLP_TRAIN_BOlD_DRIVER
 		}
 
 	protected:

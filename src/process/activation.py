@@ -1,4 +1,3 @@
-
 variants = ["sigmoid", "tanh"]
 
 VARIANTS: dict[str, str] = {

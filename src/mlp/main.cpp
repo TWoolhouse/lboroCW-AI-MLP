@@ -41,21 +41,25 @@ int main(int argc, const char** argv) {
 	log::Recorder recorder_error(mlp_fmt("model/training/{}.log", variant), true);
 	log::RecorderModel recorder_model(mlp_fmt("model/bin/{}/", variant));
 
+	FLOAT acc = std::numeric_limits<FLOAT>::max();
 	for (size_t j = 0; j < ITERATIONS; j++) {
-		FLOAT acc;
 		for (size_t i = 0; i < BATCH_SIZE; i++) {
+			FLOAT error_previous = acc;
 			acc = 0;
 			for (auto& record : dataset.train) {
 				auto error = trainer.train(record.as_input(), record.output());
 				acc += error * error;
 			}
+			#ifdef MLP_TRAIN_BOlD_DRIVER
+			trainer.bold_driver(error_previous >= acc);
+			#endif // MLP_TRAIN_BOlD_DRIVER
 		}
 		auto m = trainer.model();
 		auto error_training = std::sqrt(acc / dataset.train.size());
 		auto error_validation = std::sqrt(m.forward(dataset.validate));
 
 		auto epochs = (j + 1) * BATCH_SIZE;
-		recorder_error.train(epochs, error_training, error_validation);
+		recorder_error.train(epochs, error_training, error_validation, trainer.learning_rate);
 		recorder_model.model(m, epochs);
 	}
 

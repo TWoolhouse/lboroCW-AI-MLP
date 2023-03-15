@@ -48,18 +48,21 @@ async def entry_preprocess():
 
 
 async def entry_build():
-    build_jobs = [(name := variant_name(height[0], activation[0]), msbuild.trainer(name, height[1], activation[1]))
-                  for height, activation in variants.builds()]
+    build_jobs = [(name := variant_name(height[0], activation[0], mods[0]), msbuild.trainer(name, height[1], activation[1], mods[1]))
+                  for height, activation, mods in variants.builds()]
     print(f"Compiling Trainers: {len(build_jobs)}")
-    builds, jobs = zip(*build_jobs)
-    status = await asyncio.gather(*jobs)
-    for build, result in zip(builds, status):
-        error_code, stdout, stderr = result
+    with ProcessPoolExecutor(max_workers=4) as pool:
+        async with asyncio.TaskGroup() as tg:
+            tasks = [(name, tg.create_task(asyncio.wait_for(asyncio.get_event_loop().run_in_executor(pool, job), timeout=None)))
+                     for name, job in build_jobs]
+            for build, task in tasks:
+                task.add_done_callback(
+                    partial(lambda name, value, *_: print(f"\t{value.result()[0]} - {name}"), build))
+    for build, task in tasks:
+        error_code, stdout, stderr = task.result()
         if error_code != 0 or stderr:
             raise RuntimeError(
                 f"Failed to Compile: {build} with: {stdout}\n{stderr}")
-    for build in builds:
-        print(f"\t{build}")
 
 
 async def entry_train():
