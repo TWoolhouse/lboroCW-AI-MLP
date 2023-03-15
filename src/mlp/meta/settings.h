@@ -8,9 +8,6 @@
 
 #pragma region MLP_ACTIVATION
 
-
-#pragma region MLP_ACTIVATION
-
 #if !(defined(MLP_ACTIVATION_SIGMOID) || defined(MLP_ACTIVATION_TANH))
 #error No MLP Activation Option Selected! MLP_ACTIVATION<OPT> \
 OPT: SIGMOID, TANH
