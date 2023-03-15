@@ -66,6 +66,16 @@
 			},
 			"group": "build",
 			"detail": "Compiles to satisfy intellisense"
+		},
+		{
+			"label": "Compile Report",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/design/compile.py"
+			],
+			"group": "build",
+			"detail": "Compile the Report Markdown to PDF"
 		}
 	]
 }
