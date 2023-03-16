@@ -44,7 +44,8 @@ def dataset(name: str, dataset: list[Record]):
         axes.set_ylabel(field.replace("_", " ").title())
 
     print(f"\t{name}")
-    fig.savefig(f"./graph/dataset/{name}.png", dpi=100)
+    fig.tight_layout(h_pad=0.5)
+    fig.savefig(f"./graph/dataset/{name}.png", dpi=600)
     plt.close(fig)
 
 
@@ -100,5 +101,5 @@ def model_training(name: str, name_ds: str, name_model: str):
 
     fig.legend()
     fig.tight_layout(h_pad=0.5)
-    fig.savefig(f"graph/model/{name}.png")
+    fig.savefig(f"graph/model/{name}.png", dpi=400)
     plt.close(fig)
