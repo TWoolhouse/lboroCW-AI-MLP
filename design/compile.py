@@ -29,7 +29,7 @@ MAPPINGS = {
     "CPP_FILES": f2latex(files(".cpp", ".h")),
 }
 
-print(f"Compiling: {len(markdown_files)}")
+print(f"Compiling Report: {len(markdown_files)}")
 for input, output in markdown_files:
     print(f"\t{input}")
     output.parent.mkdir(parents=True, exist_ok=True)

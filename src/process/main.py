@@ -2,8 +2,11 @@ import argparse
 import asyncio
 import csv
 import struct
+import subprocess
+import sys
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
+from pathlib import Path
 from traceback import print_exc
 
 import dataset
@@ -100,6 +103,13 @@ async def entry_analyse_model():
         graph.model_training(name, dataset, build)
 
 
+async def entry_report():
+    # , stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+    proc = await asyncio.subprocess.create_subprocess_exec(sys.executable, Path("design/compile.py").resolve())
+    await proc.communicate()
+    return proc.returncode
+
+
 async def main(args: argparse.Namespace):
     try:
         if args.preprocess:
@@ -112,6 +122,8 @@ async def main(args: argparse.Namespace):
             await entry_train()
         if args.analyse_model:
             await entry_analyse_model()
+        if args.report:
+            await entry_report()
     except Exception:
         print_exc()
 
@@ -127,5 +139,7 @@ if __name__ == "__main__":
                         help="Analyse the raw dataset and all generated datasets")
     parser.add_argument("-am", "--analyse-model", action="store_true",
                         help="Analyse the models training results")
+    parser.add_argument("-r", "--report", action="store_true",
+                        help="Compile the Report")
 
     asyncio.run(main(parser.parse_args()))
