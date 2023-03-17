@@ -45,6 +45,7 @@
 				"-b",
 				"-t",
 				"-am",
+				"-r",
 			],
 			"group": "build",
 			"detail": "Complete run through",
@@ -63,7 +64,7 @@
 			"options": {
 				"env": {
 					"MLP_VARIANT": "default",
-					"MLP_BUILD_OPTIONS": "/DMLP_TRAINING /DMLP_HEIGHT=5 /DMLP_ACTIVATION_SIGMOID",
+					"MLP_BUILD_OPTIONS": "/DMLP_TRAINING /DMLP_HEIGHT=5 /DMLP_ACTIVATION_SIGMOID /DMLP_TRAIN_ANNEALING=\"(0.1, 0.01)\"",
 				}
 			},
 			"group": "build",
