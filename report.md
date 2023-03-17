@@ -29,7 +29,10 @@ header-includes: |
 
 # Data Preprocessing
 
-The data preprocessing has been carried out programmatically using Python to clean the data using statistical analysis. Initially I converted the given Excel dataset into a CSV format. This is can be easily manipulated by the builtin standard library module: `csv`. The preprocessing of the raw dataset is abstracted into several distinct sections:
+The data preprocessing has been carried out programmatically using Python to clean the data using statistical analysis.
+Initially I converted the given Excel dataset into a CSV format.
+This is can be easily manipulated by the builtin standard library module: `csv`.
+The preprocessing of the raw dataset is abstracted into several distinct sections:
 
 1. Parsing the Raw dataset.
 2. Cleaning.
@@ -38,11 +41,16 @@ The data preprocessing has been carried out programmatically using Python to cle
 
 ## Parsing
 
-The data is streamed into the program line by line. This is parsed into a [`Record`](#record) object using a static method which will raise an `Exception` if the row contains any invalid data. For our dataset, this means any rows with non-floating point values are rejected. This leads to a reduction in the size of the final dataset, however, there are 1461 in the raw set and after removing these exception raising values, 1456 rows remain. It is an insignificant amount of data to lose and therefore, I did not deem it necessary to impute values back into the dataset.
+The data is streamed into the program line by line.
+This is parsed into a [`Record`](#record) object using a static method which will raise an `Exception` if the row contains any invalid data.
+For our dataset, this means any rows with non-floating point values are rejected.
+This leads to a reduction in the size of the final dataset, however, there are 1461 in the raw set and after removing these exception raising values, 1456 rows remain.
+It is an insignificant amount of data to lose and therefore, I did not deem it necessary to impute values back into the dataset.
 
 ## Cleaning
 
-Inline with programmatic preprocessing For cleaning the data, I experimented with different methods of statistical analysis to remove.
+Inline with programmatic preprocessing, for cleaning the data, I experimented with different methods of statistical analysis to remove outlier from the dataset.
+
 
 Amount of data left
 
