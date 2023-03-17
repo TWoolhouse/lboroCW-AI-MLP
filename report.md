@@ -20,9 +20,12 @@ header-includes: |
 
 # Overview
 
+***Gooooooood morning Vietnam***
 - Monolithic structure from processing to report.
 - Language?
 - Variants
+
+![alt](graph/model/std_dev_3.linear_1-9_e-1.year_2_1_1.H10.tanh.momentum.bold_driver.png)
 
 # Data Preprocessing
 
