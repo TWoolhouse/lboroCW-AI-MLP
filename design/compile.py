@@ -27,6 +27,7 @@ def f2latex(files: list[Path]) -> str:
 MAPPINGS = {
     "PYTHON_FILES": f2latex(files(".py")),
     "CPP_FILES": f2latex(files(".cpp", ".h")),
+    "CODE_FILE": r"\inputminted[linenos,frame=lines,tabsize=4,baselinestretch=1,autogobble,breaklines=true,python3=true,xleftmargin=-0.5cm,xrightmargin=-1cm]",
 }
 
 print(f"Compiling Report: {len(markdown_files)}")
