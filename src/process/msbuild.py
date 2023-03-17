@@ -32,7 +32,7 @@ def compile(variation: str, defines: dict[str, str | int | float | None], config
         "MLP_VARIANT": variation,
         "MLP_BUILD_OPTIONS": "{defines}".format(
             defines=" ".join(
-                f"/DMLP_{key.upper()}" if value is None else f"/DMLP_{key.upper()}={value}" for key, value in defines.items())
+                f"/DMLP_{key.upper()}" if value is None else f"/DMLP_{key.upper()}=\"{value}\"" for key, value in defines.items())
         ),
     }
 

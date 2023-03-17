@@ -21,7 +21,7 @@ namespace mlp {
 			Node<Size, Activator> node;
 			union {
 				FLOAT sum, delta;
-		};
+			};
 			FLOAT activated;
 
 			#ifdef MLP_TRAIN_MOMENTUM
@@ -46,12 +46,12 @@ namespace mlp {
 				sum = node.compute(inputs);
 				activated = node.activate(sum);
 				return activated;
-				}
+			}
 
 			static constexpr FLOAT backward_error(FLOAT correct, FLOAT guess) {
 				#ifdef MLP_TRAIN_WEIGHT_DECAY
-				return (correct - guess) + 
-				#else // !MLP_TRAIN_WEIGHT_DECAY
+				return (correct - guess) +
+					#else // !MLP_TRAIN_WEIGHT_DECAY
 				return correct - guess;
 				#endif // MLP_TRAIN_WEIGHT_DECAY
 			}
@@ -62,7 +62,7 @@ namespace mlp {
 			void backward_delta_hidden(FLOAT fwd_delta, FLOAT fwd_weight) {
 				delta = fwd_weight * fwd_delta * node.differential(sum);
 			}
-			};
+		};
 	protected:
 		std::array<Cell<Inputs>, Height> layer;
 		Cell<Height> output;
@@ -92,7 +92,7 @@ namespace mlp {
 		FLOAT forward(const std::array<FLOAT, Inputs>& inputs) {
 			auto hidden = forward_hidden(inputs);
 			return output.forward(hidden);
-	}
+		}
 
 		// Forward pass for the hidden layer
 		std::array<FLOAT, Height> forward_hidden(const std::array<FLOAT, Inputs>& inputs) {
@@ -158,6 +158,6 @@ namespace mlp {
 			}
 			output.node = model.output;
 		}
-		};
+	};
 
 } // namespace mlp

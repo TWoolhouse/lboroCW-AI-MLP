@@ -1,8 +1,6 @@
 import argparse
 import asyncio
 import csv
-import struct
-import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial

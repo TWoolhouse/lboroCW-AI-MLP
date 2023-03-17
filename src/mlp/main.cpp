@@ -44,10 +44,11 @@ int main(int argc, const char** argv) {
 	FLOAT acc = std::numeric_limits<FLOAT>::max();
 	for (size_t j = 0; j < ITERATIONS; j++) {
 		for (size_t i = 0; i < BATCH_SIZE; i++) {
+			const size_t current_epoch = j * BATCH_SIZE + i;
 			FLOAT error_previous = acc;
 			acc = 0;
 			for (auto& record : dataset.train) {
-				auto error = trainer.train(record.as_input(), record.output());
+				auto error = trainer.train(record.as_input(), record.output(), static_cast<FLOAT>(current_epoch) / EPOCHS);
 				acc += error * error;
 			}
 			#ifdef MLP_TRAIN_BOLD_DRIVER
