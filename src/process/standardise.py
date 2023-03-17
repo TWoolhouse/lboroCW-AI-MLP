@@ -62,5 +62,5 @@ def variant_linear(lower: float, upper: float) -> Variant:
 
 
 VARIANTS: dict[str, Variant] = {
-    "linear_1-9_e-1": variant_linear(0.1, 0.9)
+    "lin1-9": variant_linear(0.1, 0.9)
 }

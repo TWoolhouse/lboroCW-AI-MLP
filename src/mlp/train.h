@@ -5,12 +5,6 @@
 #include "model.h"
 #include "activation.h"
 
-// #define MLP_TRAIN_MOMENTUM 0.9
-// #define MLP_TRAIN_BOLD_DRIVER
-// #define MLP_TRAIN_ANNEALING
-// #define MLP_TRAIN_WEIGHT_DECAY
-
-
 namespace mlp {
 
 	template<size_t Inputs, Activation Activator, size_t Height>
@@ -27,7 +21,7 @@ namespace mlp {
 			Node<Size, Activator> node;
 			union {
 				FLOAT sum, delta;
-			};
+		};
 			FLOAT activated;
 
 			#ifdef MLP_TRAIN_MOMENTUM
@@ -52,10 +46,11 @@ namespace mlp {
 				sum = node.compute(inputs);
 				activated = node.activate(sum);
 				return activated;
-			}
+				}
 
 			static constexpr FLOAT backward_error(FLOAT correct, FLOAT guess) {
 				#ifdef MLP_TRAIN_WEIGHT_DECAY
+				return (correct - guess) + 
 				#else // !MLP_TRAIN_WEIGHT_DECAY
 				return correct - guess;
 				#endif // MLP_TRAIN_WEIGHT_DECAY
@@ -67,15 +62,18 @@ namespace mlp {
 			void backward_delta_hidden(FLOAT fwd_delta, FLOAT fwd_weight) {
 				delta = fwd_weight * fwd_delta * node.differential(sum);
 			}
-		};
+			};
 	protected:
 		std::array<Cell<Inputs>, Height> layer;
 		Cell<Height> output;
 
 	public:
 		// Forward & Backward Pass
-		FLOAT train(const std::array<FLOAT, Inputs>& inputs, FLOAT correct) {
+		FLOAT train(const std::array<FLOAT, Inputs>& inputs, FLOAT correct, FLOAT epoch_percent) {
 			auto guess = forward(inputs);
+			#ifdef MLP_TRAIN_ANNEALING
+			learning_rate = annealing(epoch_percent);
+			#endif // MLP_TRAIN_ANNEALING
 			backward(inputs, correct);
 			auto error = correct - guess;
 			return error;
@@ -94,7 +92,7 @@ namespace mlp {
 		FLOAT forward(const std::array<FLOAT, Inputs>& inputs) {
 			auto hidden = forward_hidden(inputs);
 			return output.forward(hidden);
-		}
+	}
 
 		// Forward pass for the hidden layer
 		std::array<FLOAT, Height> forward_hidden(const std::array<FLOAT, Inputs>& inputs) {
@@ -137,6 +135,14 @@ namespace mlp {
 			return backward_update_weight(bias, cell, 1);
 		}
 
+		constexpr FLOAT annealing(FLOAT epoch_percentage) const {
+			#ifdef MLP_TRAIN_ANNEALING
+			return MLP_TRAIN_ANNEALING_END + (MLP_TRAIN_ANNEALING_START - MLP_TRAIN_ANNEALING_END) * (1.0 - 1.0 / (1.0 + exp(10.0 - 20.0 * epoch_percentage)));
+			#else // !MLP_TRAIN_ANNEALING
+			return 0.0;
+			#endif // MLP_TRAIN_ANNEALING
+		}
+
 	public:
 		Model<Inputs, Activator, Height> model() const {
 			std::array<Node<Inputs, Activator>, Height> nodes;
@@ -152,6 +158,6 @@ namespace mlp {
 			}
 			output.node = model.output;
 		}
-	};
+		};
 
 } // namespace mlp

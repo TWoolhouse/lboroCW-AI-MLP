@@ -22,3 +22,18 @@ OPT: SIGMOID, TANH
 #endif // MLP_ACTIVATION
 
 #pragma endregion
+
+#pragma region MLP_TRAIN_ANNEALING
+
+#ifdef MLP_TRAIN_ANNEALING
+#define _MC_CONCAT(x, y) x##y
+#define MC_CONCAT(x, y) _MC_CONCAT(x, y)
+
+#define _EXTRACT_TUP_0(zero, ...) zero
+#define _EXTRACT_TUP_1(zero, one, ...) one
+
+#define MLP_TRAIN_ANNEALING_START MC_CONCAT(_EXTRACT_TUP_0, MLP_TRAIN_ANNEALING)
+#define MLP_TRAIN_ANNEALING_END   MC_CONCAT(_EXTRACT_TUP_1, MLP_TRAIN_ANNEALING)
+#endif // MLP_TRAIN_ANNEALING
+
+#pragma endregion
