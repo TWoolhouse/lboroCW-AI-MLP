@@ -10,6 +10,7 @@
 constexpr size_t EPOCHS = 2000;
 constexpr size_t BATCH_SIZE = EPOCHS / 100;
 constexpr size_t ITERATIONS = EPOCHS / BATCH_SIZE;
+constexpr unsigned int RANDOM_SEED = 123;
 
 // mlp <variant-name> <dataset>
 int main(int argc, const char** argv) {
@@ -31,7 +32,7 @@ int main(int argc, const char** argv) {
 
 	mlp_log_info("Epochs: {} @ {}x{}", EPOCHS, BATCH_SIZE, ITERATIONS);
 
-	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model;
+	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model{ RANDOM_SEED };
 
 	auto mse = model.forward(dataset.validate);
 	mlp_log_info("Validation RMSE: {:0<20}", std::sqrt(mse));

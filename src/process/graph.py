@@ -89,7 +89,8 @@ def model_training(name: str, name_ds: str, name_model: str):
 
     plotting = [func for func, pred in [
         (graph_error, lambda: True),
-        (graph_learning_rate, lambda: "bold_driver" in name_model),
+        (graph_learning_rate, lambda: any(
+            name in name_model for name in ("bold_driver", "annealing"))),
     ] if pred()]
 
     fig, axes = plt.subplots(len(plotting))

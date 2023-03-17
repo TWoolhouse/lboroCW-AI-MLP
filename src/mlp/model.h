@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <random>
 
 #include "meta.h"
 #include "node.h"
@@ -22,6 +23,20 @@ namespace mlp {
 
 	public:
 		Model(): layer(), output() {}
+		Model(unsigned int random_seed): layer(), output() {
+			std::default_random_engine engine{ random_seed };
+			std::uniform_real_distribution<FLOAT> distribution{-static_cast<FLOAT>(Inputs) / 2, static_cast<FLOAT>(Inputs) / 2};
+			auto rand = [&]() { return distribution(engine); };
+			auto randomise = [&](auto&& node) {
+				node.bias = rand();
+				for (auto& weight : node.weights)
+					weight = rand();
+			};
+
+			for (auto& node : layer)
+				randomise(node);
+			randomise(output);
+		}
 		Model(std::filesystem::path path) {}
 		Model(std::array<Node<Inputs, Activator>, Height>&& nodes, Node<Height, Activator> output): layer(std::move(nodes)), output(output) {}
 
