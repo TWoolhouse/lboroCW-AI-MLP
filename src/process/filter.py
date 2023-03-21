@@ -62,6 +62,6 @@ VARIANTS: dict[str, Variant] = {
     # "iqr_2": variant_inter_quartile_range(2),
     # "iqr_1": variant_inter_quartile_range(1),
     "std_dev_iqr_3": variant_standard_deviation_inter_quartile_range(3),
-    "std_dev_iqr_2": variant_standard_deviation_inter_quartile_range(2),
+    # "std_dev_iqr_2": variant_standard_deviation_inter_quartile_range(2),
     # "std_dev_iqr_1": variant_standard_deviation_inter_quartile_range(1),
 }
