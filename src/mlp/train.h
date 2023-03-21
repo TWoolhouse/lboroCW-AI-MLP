@@ -82,8 +82,8 @@ namespace mlp {
 		// Run the bold driver to edit the learning parameter
 		void bold_driver(bool improved) {
 			#ifdef MLP_TRAIN_BOLD_DRIVER
-			FLOAT modifier = improved ? 1.01 : 0.97;
-			learning_rate = std::clamp(learning_rate * modifier, 0.001, 0.5);
+			FLOAT modifier = improved ? MLP_TRAIN_BOLD_DRIVER_INC : MLP_TRAIN_BOLD_DRIVER_DEC;
+			learning_rate = std::clamp(learning_rate * modifier, MLP_TRAIN_BOLD_DRIVER_MIN, MLP_TRAIN_BOLD_DRIVER_MAX);
 			#endif // MLP_TRAIN_BOLD_DRIVER
 		}
 
@@ -135,7 +135,7 @@ namespace mlp {
 			return backward_update_weight(bias, cell, 1);
 		}
 
-		constexpr FLOAT annealing(FLOAT epoch_percentage) const {
+		constexpr NODISCARD FLOAT annealing(FLOAT epoch_percentage) const {
 			#ifdef MLP_TRAIN_ANNEALING
 			return MLP_TRAIN_ANNEALING_END + (MLP_TRAIN_ANNEALING_START - MLP_TRAIN_ANNEALING_END) * (1.0 - 1.0 / (1.0 + exp(10.0 - 20.0 * epoch_percentage)));
 			#else // !MLP_TRAIN_ANNEALING

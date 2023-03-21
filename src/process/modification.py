@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 variants = [
     ("momentum", 0.9),
-    ["bold_driver", ("annealing", (0.1, 0.01))],
+    [("bold_driver", (0.001, 0.5, 1.01, 0.97)), ("annealing", (0.1, 0.01))],
     # "weight_decay"
 ]
 
