@@ -6,6 +6,7 @@ import height
 import modification
 import split
 import standardise
+from record import FIELDS
 
 
 def variant_name(*variants: Optional[str]) -> str:
@@ -21,8 +22,7 @@ def datasets():
 
 
 def builds():
-    # TODO: Get number of inputs
-    return [(i, j, k) for i in height.variants(5) for j in activation.VARIANTS.items() for k in modification.VARIANTS.items()]
+    return [(i, j, k) for i in height.variants(len(FIELDS)) for j in activation.VARIANTS.items() for k in modification.VARIANTS.items()]
 
 
 def train():
