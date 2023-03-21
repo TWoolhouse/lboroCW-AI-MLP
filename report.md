@@ -42,7 +42,7 @@ As you may imagine, the number of combinations grows rapidly as more variations 
 
 The data preprocessing has been carried out programmatically using Python to clean the data using statistical analysis.
 Initially I converted the given Excel dataset into a CSV format.
-This is can be easily manipulated by the builtin standard library module: `csv`.
+This is can be easily manipulated by the builtin standard library module: [`csv`](https://docs.python.org/3/library/csv.html).
 The preprocessing of the raw dataset is abstracted into several distinct sections:
 
 1. [Parsing](#parsing) the Raw dataset.
