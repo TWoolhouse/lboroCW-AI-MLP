@@ -34,7 +34,7 @@ It is built around the concept of *variants*, where each *variant* is some combi
 
 1. The program will generate multiple unique datasets using different methods of preprocessing so the best can be determined for future use.
 2. It will build every combination of every activation function (sigmoid, tanh) and included modification (momentum, bold driver, etc ...).
-3. Finally it will train every built executable against every dataset, plotting the results. These are able to be automatically graphed and saved so they can be used during testing.
+3. Finally it will train every built executable against every dataset, plotting the results. These are able to be automatically graphed and the weights saved so they can be loaded again for testing.
 
 As you may imagine, the number of combinations grows rapidly as more variations are added, henceforth I decided to use C++ as the language for the training algorithm, yet Python to handle managing all of these processes and graphing outputs using [matplotlib](https://matplotlib.org/).
 
