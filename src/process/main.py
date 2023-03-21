@@ -43,7 +43,7 @@ async def entry_preprocess():
         name = variant_name(filter[0], standardise[0], split[0])
         size = len(dataset_train) + len(dataset_validate) + len(dataset_test)
         print(
-            f"\t{name: <50} {size} {size / len(dataset_raw) * 100:0>.2f}% - {len(dataset_train)}, {len(dataset_validate)}, {len(dataset_test)}")
+            f"\t{name: <50} {size} {size / len(dataset_raw) * 100:0>.2f}% - {len(dataset_train)} {len(dataset_train) / size * 100:0>.2f}%, {len(dataset_validate)} {len(dataset_validate) / size * 100:0>.2f}%, {len(dataset_test)} {len(dataset_test) / size * 100:0>.2f}%")
         dataset.serialise(name, encodings, dataset_train,
                           dataset_validate, dataset_test)
 
@@ -101,6 +101,19 @@ async def entry_analyse_model():
         graph.model_training(name, dataset, build)
 
 
+async def entry_analyse_testing():
+    trainers = variants.train()
+
+    # Move
+    print("Graphing Model Histogram")
+    graph.model_test_histogram(trainers)
+
+    print(f"Graphing Model Test Results: {len(trainers)}")
+    for name, dataset, build in trainers:
+        # print(f"\t{name}")
+        pass
+
+
 async def entry_report():
     # , stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
     proc = await asyncio.subprocess.create_subprocess_exec(sys.executable, Path("design/compile.py").resolve())
@@ -120,6 +133,8 @@ async def main(args: argparse.Namespace):
             await entry_train()
         if args.analyse_model:
             await entry_analyse_model()
+        if args.analyse_testing:
+            await entry_analyse_testing()
         if args.report:
             await entry_report()
     except Exception:
@@ -136,6 +151,10 @@ if __name__ == "__main__":
     parser.add_argument("-ad", "--analyse-dataset", action="store_true",
                         help="Analyse the raw dataset and all generated datasets")
     parser.add_argument("-am", "--analyse-model", action="store_true",
+                        help="Analyse the models test data results")
+    parser.add_argument("-v", "--test", action="store_true",
+                        help="Test the best models")
+    parser.add_argument("-at", "--analyse-testing", action="store_true",
                         help="Analyse the models training results")
     parser.add_argument("-r", "--report", action="store_true",
                         help="Compile the Report")
