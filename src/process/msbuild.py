@@ -19,6 +19,16 @@ def trainer(variation: str, height: int, activation: str, mods: list[tuple[str, 
     })
 
 
+def tester(variation: str, height: int, activation: str, mods: list[tuple[str, str | int | float | None]]):
+    return compile(variation, {
+        "HEIGHT": height,
+        f"ACTIVATION_{activation}": None,
+        **{
+            f"TRAIN_{k.upper()}": v for k, v in mods if k is not None
+        }
+    })
+
+
 def subproc(*args, env={}, capture_output=None, **kwargs) -> tuple[int, str, str]:
     proc = subprocess.run(*args, capture_output=True,
                           env={**env, **os.environ}, **kwargs)
