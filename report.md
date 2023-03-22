@@ -16,11 +16,15 @@ header-includes: |
 	\usepackage{pgffor}
 	\usepackage{minted}
 	\usepackage{paracol}
+	\usepackage{float}
 	\newcommand{\hideFromPandoc}[1]{#1}
 	\hideFromPandoc{
 		\let\Begin\begin
 		\let\End\end
 	}
+	\makeatletter
+	\def\fps@figure{H}
+	\makeatother
 ---
 
 # Overview
@@ -33,7 +37,7 @@ A short overview of the program structure may deem useful to understanding how t
 It is built around the concept of *variants*, where each *variant* is some combination of a dataset, an activation function, and a set of modifications.
 
 1. The program will generate multiple unique datasets using different methods of preprocessing so the best can be determined for future use.
-2. It will build every combination of every activation function (sigmoid, tanh) and included modification (momentum, bold driver, etc ...).
+2. It will build every combination of every activation function (sigmoid, tanh), nodes in the hidden layer , and included modification (momentum, bold driver, etc ...).
 3. Finally it will train every built executable against every dataset, plotting the results. These are able to be automatically graphed and the weights saved so they can be loaded again for testing.
 
 As you may imagine, the number of combinations grows rapidly as more variations are added, henceforth I decided to use C++ as the language for the training algorithm, yet Python to handle managing all of these processes and graphing outputs using [`matplotlib`](https://matplotlib.org/).
@@ -167,9 +171,9 @@ The reason for the custom format is to simplify and speed up the model training.
 The data is laid out to match the exact format of the C++ definition of a Record.
 This means, the input file does not need to be manipulated or transformed, therefore reducing the training time overhead.
 
-## Selection
+## Review
 
-<!-- TODO: Selection of dataset -->
+Below is the an example of a final dataset both standardised and not standardised. This will be useful later on when evaluating the final model as we will expect the model to produce a similar sinusoidal pattern.
 
 \columnratio{0.5}
 \Begin{paracol}{2}
@@ -178,12 +182,9 @@ This means, the input file does not need to be manipulated or transformed, there
 
 \switchcolumn
 
-![Dataset: Cleaned with Standard Deviation 3 & IQR 3, Split by years.](graph/dataset/std_dev_iqr_3.lin1-9.year_2_1_1.raw.png)
+![Dataset: Cleaned with Standard Deviation 3 & IQR 3, raw values](graph/dataset/std_dev_iqr_3.lin1-9.year_2_1_1.raw.png)
 
 \End{paracol}
-
-
-Amount of data left
 
 # Implementation of MLP
 
@@ -501,7 +502,7 @@ The macros for the modifications are:
 - `MLP_TRAIN_MOMENTUM`
 - `MLP_TRAIN_BOLD_DRIVER`
 - `MLP_TRAIN_ANNEALING`
-- `MLP_TRAIN_WEIGHT_DECAY`
+<!-- - `MLP_TRAIN_WEIGHT_DECAY` -->
 
 The macros may also have a value assigned to them, which is used to configure that extension.
 
@@ -609,19 +610,255 @@ FLOAT annealing(FLOAT epoch_percentage) const {
 
 The extra macro definitions once again come from `MLP_TRAIN_ANNEALING=(start, end)`.
 
-### Weight Decay
+<!-- ### Weight Decay -->
 
 <!-- TODO: Weight decay -->
 
+## Training
+
+Training takes place in [main.cpp](#main.cpp) which will train a the neural network with the given dataset. A snippet taken from the `main()` entry point function.
+
+```cpp
+constexpr size_t EPOCHS = 2000;
+constexpr size_t BATCH_SIZE = EPOCHS / 100;
+constexpr size_t ITERATIONS = EPOCHS / BATCH_SIZE;
+
+// ...
+
+FLOAT acc = std::numeric_limits<FLOAT>::max();
+for (size_t j = 0; j < ITERATIONS; j++) {
+	for (size_t i = 0; i < BATCH_SIZE; i++) {
+		const size_t current_epoch = j * BATCH_SIZE + i;
+		FLOAT error_previous = acc;
+		acc = 0;
+		for (auto& record : dataset.train) {
+			auto error = trainer.train(
+				record.as_input(),
+				record.output(),
+				static_cast<FLOAT>(current_epoch) / EPOCHS
+			);
+			acc += error * error;
+		}
+		#ifdef MLP_TRAIN_BOLD_DRIVER
+		trainer.bold_driver(error_previous >= acc);
+		#endif // MLP_TRAIN_BOLD_DRIVER
+	}
+
+	// Logging Information to be read by the main Python script
+	auto m = trainer.model();
+	auto error_training = std::sqrt(acc / dataset.train.size());
+	auto error_validation = std::sqrt(m.forward(dataset.validate));
+
+	auto epochs = (j + 1) * BATCH_SIZE;
+	recorder_error.train(epochs,
+		error_training,
+		error_validation,
+		trainer.learning_rate
+	);
+	recorder_model.model(m, epochs);
+}
+```
+
+This is where the training is initiated from. Each epoch, every record in the training set is used to train the model.
+Every `BATCH_SIZE` epochs, the current RMSE for of the training data is logged along with it's performance on the validation set. Finally, the model is serialised to a file so that is can be reused later on the testing set.
+
 # Training and Network Selection
 
+As mentioned in the [Overview](#overview), the whole process is fully automated by the main Python script.
+The script will build all of the necessary executable files and datasets before running the training algorithm on every possible variant.
 
+| Type          | Segment |                        Variants |
+| :------------ | :------ | ------------------------------: |
+| Filter        | Dataset | Std Dev 3, IQR 3, Std Dev IQR 3 |
+| Standardise   | Dataset |          Linear 1-9, Linear 0-1 |
+| Split         | Dataset |   Random 60 20 20, Yearly 2 1 1 |
+| Activation    | Build   |                   Sigmoid, TanH |
+| Height        | Build   |               5, 6, 7, 8, 9, 10 |
+| Momentum      | Build   |               Enabled, Disabled |
+| Learning Rate | Build   |    None, Bold Driver, Annealing |
+
+<!--          | Weight Decay |                           Build | Enabled, Disabled | -->
+
+This results in 12 unique dataset, 72 model configurations, and 864 models to be trained!
+
+The performance of every single model is logged after every $X$ number of epochs and graphed in various different ways which allows for deciding on which network configuration is the best. This means that the final RMSE of the training does not matter, as the lowest RMSE against the validation set will be used. To keep all graph names unique and easily identifiable, the title is usually related to the variant in the form of:
+
+\Begin{center}
+
+`filter.standardise.split.height.activation.modifications`
+
+\End{center}
+
+## Epochs
+
+The number of epochs is important during training as we don't want to overtrain any of the models nor do we want to undertrain them.
+
+I settled on 20000 epochs as the performance of all networks has begn settling by this point and going further provides no benefit. For example:
+
+![The RMSE plateaus as it reaches the maximum number of epochs](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H09.tanh.png)
+
+The performance of this particular variant does most of the training within the first few thousand epochs. This pattern appears in most of the networks. Furthermore, most networks are constantly improving until the cutoff point:
+
+![The models that reach peak performance before the max epochs is in the minority](graph/all/best_epochs.png)
+
+## Dataset
+
+To prove that the different dataset preprocessing methods make a significant difference to training, graphed below is the performance of all datasets on a single model configuration.
+
+![Comparison of Different Datasets using the same Model](graph/dataset_group/H07.sigmoid.bold_driver.png)
+
+We can see that as the random data splitting is putting the results into 2 groups. Those using the random splitting are consistently better than the yearly method as well as having a smoother growth to improvement. It also shows us that the methods of cleaning the data do not have a correlation as to how well they perform.
+
+## Activation Function
+
+For a comparison between activation functions, `Sigmoid` would be a smoother training progression while `TanH` would be more erratic (especially with modifications) but more likely to reach a lower RMSE by the end of the training.
+
+\columnratio{0.5}
+\Begin{paracol}{2}
+
+![Sigmoid](graph/model/std_dev_iqr_3.lin1-9.random_60_20_20.H05.sigmoid.png)
+
+\switchcolumn
+
+![TanH](graph/model/std_dev_iqr_3.lin1-9.random_60_20_20.H05.tanh.png)
+
+\End{paracol}
+
+## Momentum
+
+The introduction of momentum drastically reduces the number of epochs required to reach the plateau. Because it reaches this lower point faster, it is able to reduce the RMSE of the models more. Momentum would always yield improvements for the training and validation set.
+
+\columnratio{0.5}
+\Begin{paracol}{2}
+
+![No Momentum](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H05.sigmoid.png)
+
+\switchcolumn
+
+![Momentum](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H05.sigmoid.momentum.png)
+
+\End{paracol}
+
+## Bold Driver
+
+Bold driver has a huge impact on the training. For some variants, the bold driver is very stable and improves the RMSE. However in some, it becomes erratic, while not making the models unusable, they are rather unstable. Bold driver was affected by every single change in the variants, including the dataset. It should be noted that bold driver was comparing the improvement of the RMSE when compared against the training dataset, not the validation.
+
+Below are two separate models with varying number of hidden nodes. They are fairly stable compared to others. It should be noted that the erratic nature of bold driver shown here is due to the large number of epochs. Looking at the beginning of the graph shows that the bold driver is correctly changing
+
+\columnratio{0.5}
+\Begin{paracol}{2}
+
+![Stable with a low Height](graph/model/iqr_3.lin1-9.year_2_1_1.H05.tanh.momentum.bold_driver.png)
+
+\switchcolumn
+
+![Stable with a large Height](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H10.tanh.momentum.bold_driver.png)
+
+\End{paracol}
+
+But below, the training has become incredibly erratic and unpredictable. While it looks like it might be performing much worse, it still reaches the same lowest point when compared to a stable variant. Furthermore, the RMSE of bold driver in general is lower than the models without.
+
+\columnratio{0.5}
+\Begin{paracol}{2}
+
+![Erratic with sigmoid](graph/model/iqr_3.lin1-9.year_2_1_1.H06.sigmoid.momentum.bold_driver.png)
+
+\switchcolumn
+
+![Erratic with tanh](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H07.tanh.momentum.bold_driver.png)
+
+\End{paracol}
+
+## Annealing
+
+Once again, annealing would change the way the model trained and the overall silhouette of the graph, however, the end result would be more or less the same. It is interesting to look at as we can confirm its affect on training.
+
+![RMSE follows the Learning Parameter Curve](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H05.tanh.momentum.annealing.png)
+
+The graph above shows us that the model is unable to train with a large `learning_rate` as it will be jumping around in weight space and can only stabelise with a smaller $\rho$.
+
+<!-- ## Weight Decay -->
+
+<!-- TODO: Add weight decay -->
+
+## Height
+
+Finally, the height (number of hidden nodes), plays a major role in the RMSE of the model. It plays its role near the beginning of the training processes as models with a larger number of hidden nodes will start with a larger RMSE. Fortunately (especially with momentum) the errors quickly reach a similar magnitude.
+
+As seen with the bold driver modification, the learning process follows a more consistent, flatter pattern. This shows us that the models with a larger number of nodes are more resilient to erratic behaviour.
+
+\columnratio{0.5}
+\Begin{paracol}{2}
+
+![5 Hidden Nodes](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H05.tanh.momentum.bold_driver.png)
+![5 Hidden Nodes](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H05.tanh.momentum.annealing.png)
+
+\switchcolumn
+
+![7 Hidden Nodes](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H07.tanh.momentum.bold_driver.png)
+![5 Hidden Nodes](graph/model/std_dev_iqr_3.lin1-9.year_2_1_1.H08.tanh.momentum.annealing.png)
+
+\End{paracol}
+
+## Selection
+
+The final models were chosen by taking the 10 top performing models where performance is measured as the RMSE against the validation set.
+
+The top 10 performing models on the `std_dev_iqr_3.lin1-9.year_2_1_1` dataset are:
+
+| Model                                  | RMSE    |
+| -------------------------------------- | ------- |
+| H09.tanh.annealing/20000               | 0.01609 |
+| H07.sigmoid.momentum.bold_driver/18600 | 0.01610 |
+| H05.tanh.annealing/20000               | 0.01617 |
+| H09.tanh.momentum.bold_driver/18400    | 0.01620 |
+| H09.tanh.bold_driver/19800             | 0.01625 |
+| H07.tanh.annealing/20000               | 0.01627 |
+| H08.sigmoid.momentum.bold_driver/18000 | 0.01633 |
+| H06.tanh.annealing/20000               | 0.01635 |
+| H08.tanh.bold_driver/11400             | 0.01637 |
+| H05.sigmoid.momentum.annealing/20000   | 0.01638 |
+
+where `H09.tanh.annealing/20000` is the model with 9 hidden nodes, tanh activation function and using the annealing modification after 20000 epochs of training.
 
 # Evaluation of Final Model
 
-GRAPH different modifications with each other.
+The final model was `std_dev_iqr_3.lin1-9.year_2_1_1.H09.tanh.annealing/20000` with an RMSE of 0.01609 on the validation dataset.
+
+The model is reloaded back into the C++ program, this time, it is predicting the pan evaporation with the given inputs.
+
+![Performance in the Whole Dataset](graph/best/std_dev_iqr_3.lin1-9.year_2_1_1.H09.tanh.annealing.20000.png)
+
+The graph above displays the models predictions using the whole dataset.
+The testing dataset is the last quarter of the data, or visually, the last "hump".
+We are able to see that prediction is always within the same band as the dataset values.
+The error graph displays the error for each individual day.
+The flat section is the training data and as such, it performs exceptionally well.
+On the test data side of things, it does not do well, however, this is to be expected. That being said, it is not a bad performance as in the extreme cases, it is only as bad as $\pm 0.4$. The average difference can be seen in the table below categorised by the exact subset:
+
+|       | Training | Validation |  Testing |
+| :---- | -------: | ---------: | -------: |
+| Error |  0.00069 |    0.00023 | -0.00482 |
+| RMSE  |  0.01476 |    0.01609 |  0.01698 |
+
+Therefore the average error is $\approx \pm 0.482$%.
 
 # Comparison with Other Models
+
+To see if this network was necessary in the first place, it is important to compare against existing statistical models. I decided to compare the best model (`std_dev_iqr_3.lin1-9.year_2_1_1.H09.tanh.annealing/20000`) against a multiple linear regression model.
+
+![Multiple Linear Regression](graph/best/std_dev_iqr_3.lin1-9.year_2_1_1.H09.tanh.annealing.20000.linreg.png)
+
+We can see already, that the statistical model is vastly out performing the network in regards to the range of outputs. As a table, linear regression performs a such:
+
+|       | Training | Validation |  Testing |
+| :---- | -------: | ---------: | -------: |
+| Error | -0.02306 |   -0.02748 | -0.02847 |
+| RMSE  |  0.04370 |    0.04612 |  0.04647 |
+
+Therefore the average error is $\approx \pm 2.847$% however there are no outliers.
+
+In conclusion, the network model performs better than the statistical model for most cases, however it can produce results that are very errornous while the linear regression model is a safer bet if these edge cases are important.
 
 # Appendix Code
 
@@ -660,3 +897,7 @@ PY_CODE_FILE{Cpp}{./src/mlp/train.h}
 ## activation.h
 
 PY_CODE_FILE{Cpp}{./src/mlp/activation.h}
+
+## main.cpp
+
+PY_CODE_FILE{Cpp}{./src/mlp/main.cpp}
