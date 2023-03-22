@@ -45,4 +45,16 @@ namespace mlp::log {
 		}
 	};
 
+	struct RecorderTest {
+		std::ofstream file;
+		RecorderTest(std::filesystem::path path): file([&]() { std::filesystem::create_directories(path.parent_path()); return path; }()) {}
+
+		void error(FLOAT training, FLOAT validation, FLOAT testing) {
+			file << mlp_fmt("{},{},{}", training, validation, testing) << std::endl;
+		}
+		void prediction(FLOAT prediction, FLOAT decoded) {
+			file << mlp_fmt("{},{}", prediction, decoded) << std::endl;
+		}
+	};
+
 } // namespace mlp::log

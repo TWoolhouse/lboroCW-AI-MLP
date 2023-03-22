@@ -7,7 +7,7 @@
 #include "train.h"
 #include "log/record.h"
 
-constexpr size_t EPOCHS = 2000;
+constexpr size_t EPOCHS = 20000;
 constexpr size_t BATCH_SIZE = EPOCHS / 100;
 constexpr size_t ITERATIONS = EPOCHS / BATCH_SIZE;
 constexpr unsigned int RANDOM_SEED = 123;
@@ -30,7 +30,19 @@ int main(int argc, const char** argv) {
 		return -2;
 	mlp_log_info("Dataset: {}, {}, {}", dataset.train.size(), dataset.validate.size(), dataset.test.size());
 
+	#ifdef MLP_TRAINING
+
 	mlp_log_info("Epochs: {} @ {}x{}", EPOCHS, BATCH_SIZE, ITERATIONS);
+
+	#ifdef MLP_TRAIN_MOMENTUM
+	mlp_log_info("Momentum: {}", MLP_TRAIN_MOMENTUM);
+	#endif
+	#ifdef MLP_TRAIN_BOLD_DRIVER
+	mlp_log_info("Bold Driver: {}, {}, {}, {}", MLP_TRAIN_BOLD_DRIVER_MIN, MLP_TRAIN_BOLD_DRIVER_MAX, MLP_TRAIN_BOLD_DRIVER_INC, MLP_TRAIN_BOLD_DRIVER_DEC);
+	#endif
+	#ifdef MLP_TRAIN_ANNEALING
+	mlp_log_info("Annealing: {}, {}", MLP_TRAIN_ANNEALING_START, MLP_TRAIN_ANNEALING_END);
+	#endif
 
 	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model{ RANDOM_SEED };
 
@@ -64,6 +76,29 @@ int main(int argc, const char** argv) {
 		recorder_error.train(epochs, error_training, error_validation, trainer.learning_rate);
 		recorder_model.model(m, epochs);
 	}
+
+	#else // !MLP_TRAINING
+
+	Model<Record::inputs, MLP_ACTIVATION, MLP_HEIGHT> model{ mlp_fmt("model/bin/{}.mdl", variant) };
+
+	log::RecorderTest recorder(mlp_fmt("test/{}.log", variant));
+
+	recorder.error(
+		std::sqrt(model.forward(dataset.train)),
+		std::sqrt(model.forward(dataset.validate)),
+		std::sqrt(model.forward(dataset.test))
+	);
+
+
+	for (auto& set : { dataset.train, dataset.validate , dataset.test }) {
+		for (auto& record : set) {
+			auto guess = model.compute(record.as_input());
+			auto raw = dataset.encodings.back().decode(guess);
+			recorder.prediction(guess, raw);
+		}
+	}
+
+	#endif // MLP_TRAINING
 
 	return 0;
 }

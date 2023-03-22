@@ -37,7 +37,19 @@ namespace mlp {
 				randomise(node);
 			randomise(output);
 		}
-		Model(std::filesystem::path path) {}
+		Model(std::filesystem::path path): Model() {
+			try {
+				std::ifstream file;
+				file.exceptions(std::ios::badbit | std::ios::failbit);
+				file.open(path, std::ios::in | std::ios::binary);
+				file.read(reinterpret_cast<char*>(this), sizeof(Model));
+				file.close();
+			}
+			catch (std::ios::failure& e) {
+				mlp_log_fatal("Unable to deserialise Model {} : {}", path.generic_string(), e.what());
+				throw e;
+			}
+		}
 		Model(std::array<Node<Inputs, Activator>, Height>&& nodes, Node<Height, Activator> output): layer(std::move(nodes)), output(output) {}
 
 		NODISCARD FLOAT compute(const std::array<FLOAT, Inputs>& inputs) const {
